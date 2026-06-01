@@ -1,11 +1,17 @@
 package com.carfinder.feature.listings
 
 import com.carfinder.core.model.CarOffer
+import com.carfinder.core.model.SearchFilter
+import com.carfinder.data.repository.SourceInfo
 
 data class ListingsUiState(
     val isRefreshing: Boolean = false,
     val offers: List<CarOffer> = emptyList(),
-    val query: String = "",
+    val filter: SearchFilter = SearchFilter(),
+    val availableMakes: List<String> = emptyList(),
+    val availableSources: List<SourceInfo> = emptyList(),
     val failedSources: List<String> = emptyList(),
     val errorMessage: String? = null,
-)
+) {
+    val activeFilterCount: Int get() = filter.activeCount()
+}

@@ -7,8 +7,10 @@ landed-cost estimation for vehicles imported from the USA.
 ## Status
 
 Runnable scaffold. The app builds and runs today against a built-in **sample data
-source**, so you can see the full flow (search -> list -> detail -> import cost
-breakdown) immediately. Real marketplace adapters are present as documented stubs.
+source**, so you can see the full flow (search -> filter -> list -> detail -> import
+cost breakdown) immediately. Filtering by make, price, year, mileage, fuel, region,
+source and sort order is wired end-to-end (live local filtering over the cache plus a
+network refresh). Real marketplace adapters are present as documented stubs.
 
 ## Architecture
 
@@ -74,9 +76,9 @@ compileSdk 35, minSdk 26. Bump via the version catalog at `gradle/libs.versions.
 
 ## Next steps
 
-- Add a filter sheet (the `SearchFilter` model already supports make/model/price/year/
-  mileage/fuel/region/source/sort — the UI only wires up free-text search so far).
 - Stand up the aggregation backend and point the stub adapters at it.
-- Add currency conversion so mixed PLN/EUR/USD results sort and compare correctly.
+- Add currency conversion so mixed PLN/EUR/USD results sort and compare correctly
+  (filtering/sorting currently compares raw amounts across currencies).
 - Make US import shipping/engine-capacity inputs editable in the detail screen.
-- Tests: repository merge/failure-isolation, import calculator, mapper round-trips.
+- Tests: repository merge/failure-isolation, import calculator, mapper round-trips,
+  `applyFilter`/`sortComparator`.

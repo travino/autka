@@ -3,17 +3,24 @@ package com.carfinder.feature.listings
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -21,14 +28,19 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.carfinder.core.model.CarOffer
 import com.carfinder.core.model.Region
+import com.carfinder.core.model.SearchFilter
 import com.carfinder.ui.components.EmptyState
 import com.carfinder.ui.components.LoadingIndicator
 import com.carfinder.ui.components.formatted
@@ -44,6 +56,8 @@ fun ListingsRoute(
         uiState = uiState,
         onQueryChange = viewModel::onQueryChange,
         onSearch = viewModel::refresh,
+        onApplyFilter = viewModel::onApplyFilter,
+        onResetFilter = viewModel::onResetFilter,
         onOfferClick = onOfferClick,
     )
 }
@@ -54,26 +68,61 @@ fun ListingsScreen(
     uiState: ListingsUiState,
     onQueryChange: (String) -> Unit,
     onSearch: () -> Unit,
+    onApplyFilter: (SearchFilter) -> Unit,
+    onResetFilter: () -> Unit,
     onOfferClick: (String) -> Unit,
 ) {
+    var showFilters by remember { mutableStateOf(false) }
+
     Scaffold(
-        topBar = { TopAppBar(title = { Text("CarFinder") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text("CarFinder") },
+                actions = {
+                    IconButton(onClick = { showFilters = true }) {
+                        BadgedBox(
+                            badge = {
+                                if (uiState.activeFilterCount > 0) {
+                                    Badge { Text(uiState.activeFilterCount.toString()) }
+                                }
+                            },
+                        ) {
+                            Icon(Icons.Default.Tune, contentDescription = "Filters")
+                        }
+                    }
+                },
+            )
+        },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
             OutlinedTextField(
-                value = uiState.query,
+                value = uiState.filter.query,
                 onValueChange = onQueryChange,
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
                 label = { Text("Search make, model...") },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(onSearch = { onSearch() }),
             )
+
+            if (uiState.failedSources.isNotEmpty()) {
+                Text(
+                    "Some sources didn't respond: ${uiState.failedSources.joinToString()}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+            }
 
             when {
                 uiState.isRefreshing && uiState.offers.isEmpty() -> LoadingIndicator()
-                uiState.offers.isEmpty() -> EmptyState("No offers yet. Pull a search to begin.")
+                uiState.offers.isEmpty() -> EmptyState(
+                    if (uiState.activeFilterCount > 0) "No offers match these filters."
+                    else "No offers yet. Pull a search to begin.",
+                )
                 else -> LazyColumn(
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
+                    contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     items(uiState.offers, key = { it.id }) { offer ->
@@ -82,6 +131,17 @@ fun ListingsScreen(
                 }
             }
         }
+    }
+
+    if (showFilters) {
+        FilterSheet(
+            filter = uiState.filter,
+            availableMakes = uiState.availableMakes,
+            availableSources = uiState.availableSources,
+            onApply = { onApplyFilter(it); showFilters = false },
+            onReset = { onResetFilter(); showFilters = false },
+            onDismiss = { showFilters = false },
+        )
     }
 }
 

@@ -18,15 +18,24 @@ class ListingsViewModel @Inject constructor(
     private val repository: CarOfferRepository,
 ) : ViewModel() {
 
-    private val mutableState = MutableStateFlow(ListingsUiState())
+    private val filter = MutableStateFlow(SearchFilter())
+    private val transient = MutableStateFlow(TransientState())
 
     val uiState: StateFlow<ListingsUiState> =
-        combine(repository.observeOffers(), mutableState) { offers, state ->
-            state.copy(offers = offers)
+        combine(repository.observeOffers(), filter, transient) { offers, f, t ->
+            ListingsUiState(
+                isRefreshing = t.isRefreshing,
+                offers = offers.applyFilter(f).sortedWith(sortComparator(f.sort)),
+                filter = f,
+                availableMakes = offers.map { it.make }.distinct().sorted(),
+                availableSources = repository.availableSources(),
+                failedSources = t.failedSources,
+                errorMessage = t.errorMessage,
+            )
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = ListingsUiState(),
+            initialValue = ListingsUiState(availableSources = repository.availableSources()),
         )
 
     init {
@@ -34,25 +43,39 @@ class ListingsViewModel @Inject constructor(
     }
 
     fun onQueryChange(query: String) {
-        mutableState.value = mutableState.value.copy(query = query)
+        filter.value = filter.value.copy(query = query)
+    }
+
+    /** Apply a new filter from the filter sheet and pull matching results. */
+    fun onApplyFilter(newFilter: SearchFilter) {
+        filter.value = newFilter
+        refresh()
+    }
+
+    /** Clear everything except the current free-text query. */
+    fun onResetFilter() {
+        filter.value = SearchFilter(query = filter.value.query)
+        refresh()
     }
 
     fun refresh() {
         viewModelScope.launch {
-            mutableState.value = mutableState.value.copy(isRefreshing = true, errorMessage = null)
-            val filter = SearchFilter(query = mutableState.value.query)
-            val failed = runCatching { repository.refresh(filter) }
+            transient.value = transient.value.copy(isRefreshing = true, errorMessage = null)
+            val failed = runCatching { repository.refresh(filter.value) }
                 .getOrElse {
-                    mutableState.value = mutableState.value.copy(
+                    transient.value = transient.value.copy(
                         isRefreshing = false,
                         errorMessage = it.message ?: "Failed to refresh",
                     )
                     return@launch
                 }
-            mutableState.value = mutableState.value.copy(
-                isRefreshing = false,
-                failedSources = failed,
-            )
+            transient.value = transient.value.copy(isRefreshing = false, failedSources = failed)
         }
     }
 }
+
+private data class TransientState(
+    val isRefreshing: Boolean = false,
+    val failedSources: List<String> = emptyList(),
+    val errorMessage: String? = null,
+)
