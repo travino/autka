@@ -2,8 +2,10 @@ package com.carfinder.feature.listings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.carfinder.core.model.Currency
 import com.carfinder.core.model.SearchFilter
 import com.carfinder.data.repository.CarOfferRepository
+import com.carfinder.data.repository.ExchangeRateRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -16,21 +18,32 @@ import javax.inject.Inject
 @HiltViewModel
 class ListingsViewModel @Inject constructor(
     private val repository: CarOfferRepository,
+    private val rateRepository: ExchangeRateRepository,
 ) : ViewModel() {
 
     private val filter = MutableStateFlow(SearchFilter())
+    private val displayCurrency = MutableStateFlow(Currency.PLN)
     private val transient = MutableStateFlow(TransientState())
 
     val uiState: StateFlow<ListingsUiState> =
-        combine(repository.observeOffers(), filter, transient) { offers, f, t ->
+        combine(
+            repository.observeOffers(),
+            filter,
+            transient,
+            rateRepository.rates(),
+            displayCurrency,
+        ) { offers, f, t, rates, currency ->
             ListingsUiState(
                 isRefreshing = t.isRefreshing,
-                offers = offers.applyFilter(f).sortedWith(sortComparator(f.sort)),
+                offers = offers.applyFilter(f, rates, currency)
+                    .sortedWith(sortComparator(f.sort, rates, currency)),
                 filter = f,
                 availableMakes = offers.map { it.make }.distinct().sorted(),
                 availableSources = repository.availableSources(),
                 failedSources = t.failedSources,
                 errorMessage = t.errorMessage,
+                displayCurrency = currency,
+                exchangeRates = rates,
             )
         }.stateIn(
             scope = viewModelScope,
@@ -40,22 +53,25 @@ class ListingsViewModel @Inject constructor(
 
     init {
         refresh()
+        viewModelScope.launch { rateRepository.refresh() }
     }
 
     fun onQueryChange(query: String) {
         filter.value = filter.value.copy(query = query)
     }
 
-    /** Apply a new filter from the filter sheet and pull matching results. */
     fun onApplyFilter(newFilter: SearchFilter) {
         filter.value = newFilter
         refresh()
     }
 
-    /** Clear everything except the current free-text query. */
     fun onResetFilter() {
         filter.value = SearchFilter(query = filter.value.query)
         refresh()
+    }
+
+    fun onDisplayCurrencyChange(currency: Currency) {
+        displayCurrency.value = currency
     }
 
     fun refresh() {

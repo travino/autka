@@ -1,24 +1,33 @@
 package com.carfinder.feature.listings
 
 import com.carfinder.core.model.CarOffer
+import com.carfinder.core.model.Currency
+import com.carfinder.core.model.ExchangeRates
 import com.carfinder.core.model.Region
 import com.carfinder.core.model.SearchFilter
 import com.carfinder.core.model.SortOrder
 
 /**
- * Client-side application of a [SearchFilter] over the locally cached offers, so the
- * list reacts instantly to filter changes. (A network refresh runs in parallel to pull
- * fresh matches from the sources.)
+ * Client-side application of a [SearchFilter] over locally cached offers, so the list
+ * reacts instantly to filter changes. Price comparisons are done in a single
+ * comparison currency ([comparisonCurrency]) using [rates], so mixed PLN/EUR/USD
+ * results filter and sort correctly. The user's min/max price are interpreted in that
+ * same comparison currency.
  */
-fun List<CarOffer>.applyFilter(f: SearchFilter): List<CarOffer> = filter { o ->
+fun List<CarOffer>.applyFilter(
+    f: SearchFilter,
+    rates: ExchangeRates,
+    comparisonCurrency: Currency,
+): List<CarOffer> = filter { o ->
+    val price = rates.convert(o.price, comparisonCurrency).amount
     (f.query.isBlank() ||
         o.title.contains(f.query, ignoreCase = true) ||
         o.make.contains(f.query, ignoreCase = true) ||
         o.model.contains(f.query, ignoreCase = true)) &&
         (f.make == null || o.make.equals(f.make, ignoreCase = true)) &&
         (f.model == null || o.model.equals(f.model, ignoreCase = true)) &&
-        (f.minPrice == null || o.price.amount >= f.minPrice) &&
-        (f.maxPrice == null || o.price.amount <= f.maxPrice) &&
+        (f.minPrice == null || price >= f.minPrice) &&
+        (f.maxPrice == null || price <= f.maxPrice) &&
         (f.minYear == null || (o.year ?: Int.MIN_VALUE) >= f.minYear) &&
         (f.maxYear == null || (o.year ?: Int.MAX_VALUE) <= f.maxYear) &&
         (f.maxMileageKm == null || (o.mileageKm ?: Int.MAX_VALUE) <= f.maxMileageKm) &&
@@ -27,10 +36,14 @@ fun List<CarOffer>.applyFilter(f: SearchFilter): List<CarOffer> = filter { o ->
         (f.sourceIds.isEmpty() || o.sourceId in f.sourceIds)
 }
 
-fun sortComparator(sort: SortOrder): Comparator<CarOffer> = when (sort) {
+fun sortComparator(
+    sort: SortOrder,
+    rates: ExchangeRates,
+    comparisonCurrency: Currency,
+): Comparator<CarOffer> = when (sort) {
     SortOrder.NEWEST -> compareByDescending { it.postedAtEpochMs ?: 0L }
-    SortOrder.PRICE_ASC -> compareBy { it.price.amount }
-    SortOrder.PRICE_DESC -> compareByDescending { it.price.amount }
+    SortOrder.PRICE_ASC -> compareBy { rates.convert(it.price, comparisonCurrency).amount }
+    SortOrder.PRICE_DESC -> compareByDescending { rates.convert(it.price, comparisonCurrency).amount }
     SortOrder.MILEAGE_ASC -> compareBy { it.mileageKm ?: Int.MAX_VALUE }
     SortOrder.YEAR_DESC -> compareByDescending { it.year ?: 0 }
 }

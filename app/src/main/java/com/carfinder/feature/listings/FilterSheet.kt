@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.carfinder.core.model.Currency
 import com.carfinder.core.model.FuelType
 import com.carfinder.core.model.Region
 import com.carfinder.core.model.SearchFilter
@@ -49,6 +50,7 @@ fun FilterSheet(
     filter: SearchFilter,
     availableMakes: List<String>,
     availableSources: List<SourceInfo>,
+    priceCurrency: Currency,
     onApply: (SearchFilter) -> Unit,
     onReset: () -> Unit,
     onDismiss: () -> Unit,
@@ -81,7 +83,7 @@ fun FilterSheet(
                 }
             }
 
-            Section("Price range") {
+            Section("Price range (${priceCurrency.symbol})") {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedTextField(
                         value = draft.minPrice?.toLong()?.toString() ?: "",

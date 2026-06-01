@@ -18,6 +18,8 @@ import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -25,6 +27,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -39,6 +42,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.carfinder.core.model.CarOffer
+import com.carfinder.core.model.Currency
+import com.carfinder.core.model.ExchangeRates
 import com.carfinder.core.model.Region
 import com.carfinder.core.model.SearchFilter
 import com.carfinder.ui.components.EmptyState
@@ -58,6 +63,7 @@ fun ListingsRoute(
         onSearch = viewModel::refresh,
         onApplyFilter = viewModel::onApplyFilter,
         onResetFilter = viewModel::onResetFilter,
+        onDisplayCurrencyChange = viewModel::onDisplayCurrencyChange,
         onOfferClick = onOfferClick,
     )
 }
@@ -70,6 +76,7 @@ fun ListingsScreen(
     onSearch: () -> Unit,
     onApplyFilter: (SearchFilter) -> Unit,
     onResetFilter: () -> Unit,
+    onDisplayCurrencyChange: (Currency) -> Unit,
     onOfferClick: (String) -> Unit,
 ) {
     var showFilters by remember { mutableStateOf(false) }
@@ -79,6 +86,10 @@ fun ListingsScreen(
             TopAppBar(
                 title = { Text("CarFinder") },
                 actions = {
+                    CurrencyMenu(
+                        selected = uiState.displayCurrency,
+                        onSelect = onDisplayCurrencyChange,
+                    )
                     IconButton(onClick = { showFilters = true }) {
                         BadgedBox(
                             badge = {
@@ -114,6 +125,14 @@ fun ListingsScreen(
                     modifier = Modifier.padding(horizontal = 16.dp),
                 )
             }
+            if (uiState.ratesAreStale) {
+                Text(
+                    "Exchange rates are indicative (offline) -- converted prices are approximate.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+            }
 
             when {
                 uiState.isRefreshing && uiState.offers.isEmpty() -> LoadingIndicator()
@@ -126,7 +145,12 @@ fun ListingsScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     items(uiState.offers, key = { it.id }) { offer ->
-                        OfferCard(offer = offer, onClick = { onOfferClick(offer.id) })
+                        OfferCard(
+                            offer = offer,
+                            displayCurrency = uiState.displayCurrency,
+                            rates = uiState.exchangeRates,
+                            onClick = { onOfferClick(offer.id) },
+                        )
                     }
                 }
             }
@@ -138,6 +162,7 @@ fun ListingsScreen(
             filter = uiState.filter,
             availableMakes = uiState.availableMakes,
             availableSources = uiState.availableSources,
+            priceCurrency = uiState.displayCurrency,
             onApply = { onApplyFilter(it); showFilters = false },
             onReset = { onResetFilter(); showFilters = false },
             onDismiss = { showFilters = false },
@@ -146,14 +171,42 @@ fun ListingsScreen(
 }
 
 @Composable
-private fun OfferCard(offer: CarOffer, onClick: () -> Unit) {
+private fun CurrencyMenu(selected: Currency, onSelect: (Currency) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    TextButton(onClick = { expanded = true }) {
+        Text(selected.name, color = MaterialTheme.colorScheme.primary)
+    }
+    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+        Currency.entries.forEach { currency ->
+            DropdownMenuItem(
+                text = { Text("${currency.name} (${currency.symbol})") },
+                onClick = { onSelect(currency); expanded = false },
+            )
+        }
+    }
+}
+
+@Composable
+private fun OfferCard(
+    offer: CarOffer,
+    displayCurrency: Currency,
+    rates: ExchangeRates?,
+    onClick: () -> Unit,
+) {
     Card(Modifier.fillMaxWidth().clickable(onClick = onClick)) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(offer.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(offer.price.formatted(), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
-                Text("${offer.year ?: "--"} | ${offer.mileageKm.kmOrDash()}", style = MaterialTheme.typography.bodySmall)
+                if (rates != null && offer.price.currency != displayCurrency) {
+                    Text(
+                        "~ ${rates.convert(offer.price, displayCurrency).formatted()}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
+            Text("${offer.year ?: "--"} | ${offer.mileageKm.kmOrDash()}", style = MaterialTheme.typography.bodySmall)
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Text(offer.location ?: "--", style = MaterialTheme.typography.bodySmall)
                 RegionBadge(offer.region)

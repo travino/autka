@@ -10,7 +10,8 @@ Runnable scaffold. The app builds and runs today against a built-in **sample dat
 source**, so you can see the full flow (search -> filter -> list -> detail -> import
 cost breakdown) immediately. Filtering by make, price, year, mileage, fuel, region,
 source and sort order is wired end-to-end (live local filtering over the cache plus a
-network refresh). Real marketplace adapters are present as documented stubs.
+network refresh), with multi-currency conversion so PLN/EUR/USD offers compare and sort
+correctly. Real marketplace adapters are present as documented stubs.
 
 ## Architecture
 
@@ -58,6 +59,21 @@ EU customs duty + PL excise/akcyza + 23% VAT). Rates are indicative constants â€
 externalize and verify them before relying on the numbers. The detail screen shows the
 full breakdown for any USA-region offer.
 
+## Currency
+
+Offers come in PLN, EUR or USD. `core/model/ExchangeRates.kt` is a pure value object
+that converts between any pair (routing through a PLN base). Filtering and sorting by
+price convert every offer into the user's chosen display currency first, so mixed-
+currency results rank correctly; the price-range filter is interpreted in that same
+currency. Cards show the original price plus an approximate converted figure, and a
+currency switcher lives in the toolbar.
+
+Rates come from `ExchangeRateRepository` (offline-first): it seeds with built-in
+indicative rates (`StaticRateProvider`, flagged as stale in the UI) and refreshes on
+launch from the **NBP (Narodowy Bank Polski) public API** via `NbpRateProvider` -- free,
+keyless, and not part of the deferred aggregation backend. A failed fetch silently keeps
+the last good rates.
+
 ## Build & run
 
 Requires Android Studio (Ladybug or newer) and JDK 17.
@@ -77,8 +93,9 @@ compileSdk 35, minSdk 26. Bump via the version catalog at `gradle/libs.versions.
 ## Next steps
 
 - Stand up the aggregation backend and point the stub adapters at it.
-- Add currency conversion so mixed PLN/EUR/USD results sort and compare correctly
-  (filtering/sorting currently compares raw amounts across currencies).
+- Persist the chosen display currency app-wide via DataStore so the detail screen and
+  app restarts honor it (currently the display currency lives in the listings screen).
+- Cache fetched exchange rates across restarts (currently re-fetched each launch).
 - Make US import shipping/engine-capacity inputs editable in the detail screen.
 - Tests: repository merge/failure-isolation, import calculator, mapper round-trips,
   `applyFilter`/`sortComparator`.
