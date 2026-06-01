@@ -90,6 +90,13 @@ Requires Android Studio (Ladybug or newer) and JDK 17.
 
 Or open the folder in Android Studio and hit Run. First sync downloads dependencies.
 
+## Continuous integration
+
+`.github/workflows/android-ci.yml` runs on every push and PR to `main`: validates the
+Gradle wrapper checksum, sets up JDK 17, then runs `lintDebug assembleDebug
+testDebugUnitTest`. The debug APK and lint report are uploaded as build artifacts.
+(There are no unit tests yet, so the test step is a no-op until you add them.)
+
 ## Versions
 
 Kotlin 2.0.21, AGP 8.7.3, Gradle 8.11.1, Compose BOM 2024.12.01, Hilt 2.52, Room 2.6.1,
