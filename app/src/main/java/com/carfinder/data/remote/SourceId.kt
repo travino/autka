@@ -2,6 +2,7 @@ package com.carfinder.data.remote
 
 /** Canonical identifiers for each aggregated source. */
 object SourceId {
+    const val BACKEND = "backend"
     const val MOCK = "mock"
     const val OTOMOTO = "otomoto"
     const val OLX = "olx"

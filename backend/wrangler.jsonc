@@ -1,0 +1,30 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "cargate-backend",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-06-02",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "cargate-offers",
+      "database_id": "50fde2d6-d2f2-4607-9961-729b462b115b",
+      "migrations_dir": "migrations"
+    }
+  ],
+  // R2 stores offer images (bucket: cargate-images).
+  "r2_buckets": [
+    { "binding": "IMAGES", "bucket_name": "cargate-images" }
+  ],
+  "triggers": {
+    // Re-run ingestion every 30 minutes
+    "crons": ["*/30 * * * *"]
+  },
+  "vars": {
+    "ENVIRONMENT": "production"
+  }
+}

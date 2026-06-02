@@ -1,5 +1,7 @@
 package com.carfinder.di
 
+import com.carfinder.BuildConfig
+import com.carfinder.data.remote.backend.BackendApi
 import com.carfinder.data.remote.rates.NbpApi
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
@@ -44,4 +46,16 @@ object NetworkModule {
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
             .create(NbpApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideBackendApi(client: OkHttpClient, json: Json): BackendApi =
+        Retrofit.Builder()
+            // The deployed Worker URL. For local `wrangler dev` on an emulator use
+            // "http://10.0.2.2:8787/"; override per build type/flavor for production.
+            .baseUrl(BuildConfig.BACKEND_BASE_URL)
+            .client(client)
+            .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
+            .build()
+            .create(BackendApi::class.java)
 }

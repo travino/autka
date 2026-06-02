@@ -9,6 +9,23 @@ landed-cost estimation for vehicles imported from the USA.
 > (package `com.carfinder`, `CarFinder*` classes). Only the user-facing name and the
 > Gradle project name changed to CarGate.
 
+## Repository layout
+
+This is a monorepo:
+
+```
+/            Android app (CarGate) — Kotlin, Compose, root Gradle project
+/backend     Cloudflare Workers backend — TypeScript, D1, R2 (see backend/README.md)
+```
+
+The app talks to the backend through a single `BackendCarOfferSource` (replacing the
+per-marketplace client adapters) that calls `GET /offers`; the backend is where compliant
+data feeds are aggregated server-side. The two share a data model: backend
+`src/lib/types.ts` mirrors the app's `CarOffer`. The app's backend URL is the
+`BACKEND_BASE_URL` `buildConfigField` in `app/build.gradle.kts` — debug uses
+`http://10.0.2.2:8787/` (emulator loopback to `wrangler dev`), release the deployed
+Worker URL.
+
 ## Status
 
 Runnable scaffold. The app builds and runs today against a built-in **sample data
@@ -104,8 +121,10 @@ until you add them.)
 
 ## Versions
 
-Kotlin 2.0.21, AGP 8.7.3, Gradle 8.11.1, Compose BOM 2024.12.01, Hilt 2.52, Room 2.6.1,
-compileSdk 35, minSdk 26. Bump via the version catalog at `gradle/libs.versions.toml`.
+Kotlin 2.1.21, AGP 8.10.1, KSP 2.1.21-2.0.1, Gradle 8.11.1, Compose BOM 2024.12.01,
+Hilt 2.56.2, Room 2.6.1, compileSdk 35, minSdk 26. These are a verified-compatible set
+(KSP is pinned to its matching Kotlin+AGP build, and Hilt 2.56.2 supports Kotlin 2.1).
+Bump via the version catalog at `gradle/libs.versions.toml`.
 
 ## Next steps
 

@@ -1,0 +1,26 @@
+{
+  "name": "cargate-backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "cf-typegen": "wrangler types",
+    "db:migrate:local": "wrangler d1 migrations apply cargate-offers --local",
+    "db:migrate:remote": "wrangler d1 migrations apply cargate-offers --remote"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.8.71",
+    "@cloudflare/workers-types": "^4.20260602.1",
+    "@types/node": "^25.9.1",
+    "typescript": "^5.7.3",
+    "vitest": "~3.2.4",
+    "wrangler": "^4.96.0"
+  },
+  "dependencies": {
+    "hono": "^4.6.20"
+  }
+}

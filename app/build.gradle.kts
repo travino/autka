@@ -19,10 +19,17 @@ android {
         versionName = "0.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
+
+        // Override per environment. 10.0.2.2 = host loopback from the Android emulator,
+        // so `wrangler dev` (localhost:8787) is reachable in debug builds.
+        buildConfigField("String", "BACKEND_BASE_URL", "\"http://10.0.2.2:8787/\"")
     }
 
     buildTypes {
         release {
+            // TODO: set to your deployed Worker URL, e.g.
+            //   https://cargate-backend.<your-subdomain>.workers.dev/
+            buildConfigField("String", "BACKEND_BASE_URL", "\"https://cargate-backend.example.workers.dev/\"")
             isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -35,7 +42,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
-    buildFeatures { compose = true }
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
     packaging {
         resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" }
     }
