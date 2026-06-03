@@ -1,12 +1,13 @@
-AUTKA — deep-link row hookup
-============================
+AUTKA — external sourcing hookup
+================================
 
-1) ListingsScreen.kt — imports
-   Add:
-       import com.autka.feature.external.MarketplaceLinksRow
+A) feature/external/MarketplaceLinksRow.kt — add two imports left out earlier:
+       import androidx.compose.runtime.remember
+       import androidx.compose.foundation.layout.size
 
-2) ListingsScreen.kt — show the row in BOTH the empty state and below results.
-   Replace the existing `when { ... }` block with:
+B) ListingsScreen.kt
+   B1. import com.autka.feature.external.MarketplaceLinksRow
+   B2. Replace the existing `when { ... }` results block with:
 
             when {
                 uiState.isRefreshing && uiState.offers.isEmpty() -> LoadingIndicator()
@@ -17,8 +18,6 @@ AUTKA — deep-link row hookup
                         if (uiState.activeFilterCount > 0) stringResource(R.string.empty_no_match)
                         else stringResource(R.string.empty_no_offers),
                     )
-                    // No results in our cache — let the user jump straight to the
-                    // marketplaces' own search, pre-filled from their filter.
                     MarketplaceLinksRow(filter = uiState.filter)
                 }
                 else -> LazyColumn(
@@ -33,29 +32,43 @@ AUTKA — deep-link row hookup
                             onClick = { onOfferClick(offer.id) },
                         )
                     }
-                    // Footer: always offer "continue on Otomoto/OLX" under the list.
-                    item {
-                        MarketplaceLinksRow(
-                            filter = uiState.filter,
-                            modifier = Modifier.padding(top = 4.dp),
-                        )
-                    }
+                    item { MarketplaceLinksRow(filter = uiState.filter, modifier = Modifier.padding(top = 4.dp)) }
                 }
             }
 
-   (uiState.filter already exists on ListingsUiState; no ViewModel change needed.)
+C) OfferDetailScreen.kt
+   C1. import com.autka.feature.external.ImportServicesSection
+   C2. In the Success branch column, right AFTER the `uiState.importEstimate?.let { ... }`
+       ImportBreakdown block, add:
 
-3) MarketplaceLinksRow.kt — two imports I left out earlier:
-       import androidx.compose.runtime.remember
-       import androidx.compose.foundation.layout.size
+                ImportServicesSection(region = uiState.offer.region)
 
-4) res/values/strings.xml  (English / default)
+       (Section self-hides for POLAND offers, so it's safe to call unconditionally.)
+
+D) res/values/strings.xml  (English / default)
        <string name="continue_search_on">Continue your search on</string>
        <string name="no_browser">No app found to open this link</string>
+       <string name="import_via_title">Import this car via</string>
+       <string name="import_open_site">Open site</string>
+       <string name="import_open_calculator">Cost calculator</string>
+       <string name="import_services_disclaimer">Independent companies — Autka is not affiliated and does not vouch for them.</string>
 
-5) res/values-pl/strings.xml  (Polish)
+E) res/values-pl/strings.xml  (Polish)
        <string name="continue_search_on">Szukaj dalej w serwisie</string>
        <string name="no_browser">Brak aplikacji do otwarcia tego linku</string>
+       <string name="import_via_title">Sprowadź to auto przez</string>
+       <string name="import_open_site">Otwórz stronę</string>
+       <string name="import_open_calculator">Kalkulator kosztów</string>
+       <string name="import_services_disclaimer">Niezależne firmy — Autka nie jest z nimi powiązana i za nie nie ręczy.</string>
 
-Affiliate later: MarketplaceLinksRow(filter = uiState.filter, affiliateId = "yourId")
-Verify the otomoto/olx search[...] param keys live before relying on the filtering.
+F) Backend
+   F1. Drop files:
+         backend-import-services.ts        -> backend/src/data/import-services.ts
+         backend-import-services-route.ts  -> backend/src/routes/import-services.ts
+   F2. Mount the router where offersRouter is mounted (src/index.ts or app entry):
+         import { importServicesRouter } from "./routes/import-services";
+         app.route("/", importServicesRouter);
+   F3. Add to backend/README API table:
+         | GET | /import-services | Import companies (?region= to filter) |
+
+Then delete this file.
