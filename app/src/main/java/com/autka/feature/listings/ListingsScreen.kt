@@ -1,5 +1,6 @@
 package com.autka.feature.listings
 
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import com.autka.R
 import androidx.compose.foundation.clickable
@@ -231,7 +232,7 @@ private fun OfferCard(
                 }
                 offer.listingCount?.takeIf { it > 1 }?.let {
                     Text(
-                        stringResource(R.string.listed_on_sites, it),
+                        pluralStringResource(R.plurals.listed_on_sites, it, it),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.secondary,
                     )

@@ -7,7 +7,6 @@
     <string name="retry">Retry</string>
     <string name="empty_no_match">No offers match these filters.</string>
     <string name="empty_no_offers">No offers yet. Pull a search to begin.</string>
-    <string name="listed_on_sites">Listed on %1$d sites</string>
 
     <!-- Detail -->
     <string name="offer">Offer</string>
@@ -38,7 +37,6 @@
     <string name="filter_max">Max</string>
     <string name="filter_any">Any</string>
     <string name="filter_region">Region</string>
-    <string name="filter_all">all</string>
     <string name="filter_sources">Sources</string>
     <string name="filter_price_range">Price range (%1$s)</string>
     <string name="filter_min_year">Min year: %1$s</string>
@@ -73,4 +71,8 @@
     <string name="map_no_key">Add MAPS_API_KEY to local.properties to enable the map.</string>
     <string name="view_listing">View listing</string>
     <string name="share">Share</string>
+    <plurals name="listed_on_sites">
+        <item quantity="one">Listed on %1$d site</item>
+        <item quantity="other">Listed on %1$d sites</item>
+    </plurals>
 </resources>

@@ -7,7 +7,6 @@
     <string name="retry">Ponów</string>
     <string name="empty_no_match">Brak ofert spełniających te filtry.</string>
     <string name="empty_no_offers">Brak ofert. Rozpocznij wyszukiwanie.</string>
-    <string name="listed_on_sites">Wystawiono w %1$d serwisach</string>
 
     <!-- Detail -->
     <string name="offer">Oferta</string>
@@ -38,7 +37,6 @@
     <string name="filter_max">Maks</string>
     <string name="filter_any">Dowolne</string>
     <string name="filter_region">Region</string>
-    <string name="filter_all">wszystkie</string>
     <string name="filter_sources">Źródła</string>
     <string name="filter_price_range">Cena (%1$s)</string>
     <string name="filter_min_year">Rok od: %1$s</string>
@@ -73,4 +71,10 @@
     <string name="map_no_key">Dodaj MAPS_API_KEY do local.properties, aby włączyć mapę.</string>
     <string name="view_listing">Zobacz ogłoszenie</string>
     <string name="share">Udostępnij</string>
+    <plurals name="listed_on_sites">
+        <item quantity="one">Wystawiono w %1$d serwisie</item>
+        <item quantity="few">Wystawiono w %1$d serwisach</item>
+        <item quantity="many">Wystawiono w %1$d serwisach</item>
+        <item quantity="other">Wystawiono w %1$d serwisu</item>
+    </plurals>
 </resources>
