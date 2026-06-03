@@ -7,9 +7,9 @@ updates:
   - package-ecosystem: "gradle"
     directory: "/"
     schedule:
-      interval: "daily"
-#      day: "monday"
-      time: "07:00"
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
       timezone: "Europe/Warsaw"
     open-pull-requests-limit: 15
     rebase-strategy: "disabled"
@@ -37,9 +37,9 @@ updates:
   - package-ecosystem: "npm"
     directory: "/backend"
     schedule:
-      interval: "daily"
-#      day: "monday"
-      time: "07:00"
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
       timezone: "Europe/Warsaw"
     open-pull-requests-limit: 10
     commit-message:
@@ -54,9 +54,9 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
 #      day: "monday"
-      time: "07:00"
+      time: "06:00"
       timezone: "Europe/Warsaw"
     open-pull-requests-limit: 5
     commit-message:
