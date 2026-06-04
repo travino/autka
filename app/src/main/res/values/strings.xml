@@ -75,4 +75,12 @@
         <item quantity="one">Listed on %1$d site</item>
         <item quantity="other">Listed on %1$d sites</item>
     </plurals>
+
+    <!-- External sourcing: marketplace deep-links + import-service directory -->
+    <string name="continue_search_on">Continue your search on</string>
+    <string name="no_browser">No app available to open this link</string>
+    <string name="import_via_title">Import this car via</string>
+    <string name="import_open_site">Open site</string>
+    <string name="import_open_calculator">Cost calculator</string>
+    <string name="import_services_disclaimer">Independent companies, not affiliated with Autka. Verify terms and costs directly.</string>
 </resources>

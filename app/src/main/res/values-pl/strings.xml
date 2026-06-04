@@ -77,4 +77,12 @@
         <item quantity="many">Wystawiono w %1$d serwisach</item>
         <item quantity="other">Wystawiono w %1$d serwisu</item>
     </plurals>
+
+    <!-- External sourcing: marketplace deep-links + import-service directory -->
+    <string name="continue_search_on">Szukaj dalej w</string>
+    <string name="no_browser">Brak aplikacji do otwarcia tego linku</string>
+    <string name="import_via_title">Sprowadź to auto przez</string>
+    <string name="import_open_site">Otwórz stronę</string>
+    <string name="import_open_calculator">Kalkulator kosztów</string>
+    <string name="import_services_disclaimer">Niezależne firmy, niepowiązane z Autka. Zweryfikuj warunki i koszty bezpośrednio.</string>
 </resources>

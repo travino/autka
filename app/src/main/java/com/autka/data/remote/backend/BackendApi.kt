@@ -1,6 +1,7 @@
 package com.autka.data.remote.backend
 
-import kotlinx.serialization.SerialName
+import com.autka.core.model.ImportService
+import com.autka.core.model.Region
 import kotlinx.serialization.Serializable
 import retrofit2.http.GET
 import retrofit2.http.Query
@@ -27,6 +28,17 @@ interface BackendApi {
         @Query("sort") sort: String? = null,
         @Query("limit") limit: Int? = null,
     ): OffersResponse
+
+    /**
+     * Authoritative import/sourcing-company directory (served at GET /import-services).
+     * Optional [region] narrows to companies importing FROM that region. The app uses
+     * this to override its compiled-in seed; a failed call is swallowed by the
+     * repository so the offline-first seed remains.
+     */
+    @GET("import-services")
+    suspend fun importServices(
+        @Query("region") region: String? = null,
+    ): ImportServicesResponse
 }
 
 @Serializable
@@ -59,3 +71,26 @@ data class OfferDto(
 
 @Serializable
 data class MoneyDto(val amount: Double, val currency: String)
+
+@Serializable
+data class ImportServicesResponse(val services: List<ImportServiceDto> = emptyList())
+
+@Serializable
+data class ImportServiceDto(
+    val id: String,
+    val displayName: String,
+    val origin: String,
+    val url: String,
+    val calculatorUrl: String? = null,
+    val note: String? = null,
+)
+
+/** Map a backend DTO to the domain model; an unknown [origin] string defaults to EUROPE. */
+fun ImportServiceDto.toModel(): ImportService = ImportService(
+    id = id,
+    displayName = displayName,
+    origin = runCatching { Region.valueOf(origin) }.getOrDefault(Region.EUROPE),
+    url = url,
+    calculatorUrl = calculatorUrl,
+    note = note,
+)

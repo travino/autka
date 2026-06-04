@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.autka.core.model.ImportCostCalculator
 import com.autka.core.model.Region
+import com.autka.data.imports.ImportServicesRepository
 import com.autka.data.repository.CarOfferRepository
 import com.autka.data.repository.ExchangeRateRepository
 import com.autka.data.settings.SettingsRepository
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -22,6 +24,7 @@ class OfferDetailViewModel @Inject constructor(
     repository: CarOfferRepository,
     rateRepository: ExchangeRateRepository,
     settingsRepository: SettingsRepository,
+    importServicesRepository: ImportServicesRepository,
 ) : ViewModel() {
 
     private val offerId: String = checkNotNull(savedStateHandle["offerId"])
@@ -30,6 +33,12 @@ class OfferDetailViewModel @Inject constructor(
     // an unknown engine capacity (the calculator then assumes the lower excise band).
     private val shippingUsd = MutableStateFlow(2_400.0)
     private val engineCapacityCc = MutableStateFlow<Int?>(null)
+
+    init {
+        // Override the compiled-in seed with the backend directory. Offline-safe: a
+        // failed fetch keeps the seed, so this can never break the screen.
+        viewModelScope.launch { importServicesRepository.refresh() }
+    }
 
     val uiState: StateFlow<OfferDetailUiState> =
         combine(
@@ -60,11 +69,21 @@ class OfferDetailViewModel @Inject constructor(
                     exchangeRates = rates,
                 )
             }
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = OfferDetailUiState.Loading,
-        )
+        }
+            .combine(importServicesRepository.services()) { state, services ->
+                // Attach region-matched importers (USA offer -> US importers, etc.).
+                // POLAND or non-Success -> unchanged (empty list hides the section).
+                if (state is OfferDetailUiState.Success && state.offer.region != Region.POLAND) {
+                    state.copy(importServices = services.filter { it.origin == state.offer.region })
+                } else {
+                    state
+                }
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = OfferDetailUiState.Loading,
+            )
 
     /** Update the shipping assumption (USD). Ignores blank/negative input. */
     fun onShippingChange(usd: Double?) {

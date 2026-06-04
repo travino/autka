@@ -53,6 +53,7 @@ import com.autka.core.model.Currency
 import com.autka.core.model.ExchangeRates
 import com.autka.core.model.Region
 import com.autka.core.model.SearchFilter
+import com.autka.feature.external.MarketplaceLinksRow
 import com.autka.ui.components.EmptyState
 import com.autka.ui.components.OfferImage
 import com.autka.ui.components.LoadingIndicator
@@ -150,10 +151,17 @@ fun ListingsScreen(
 
             when {
                 uiState.isRefreshing && uiState.offers.isEmpty() -> LoadingIndicator()
-                uiState.offers.isEmpty() -> EmptyState(
-                    if (uiState.activeFilterCount > 0) stringResource(R.string.empty_no_match)
-                    else stringResource(R.string.empty_no_offers),
-                )
+                uiState.offers.isEmpty() -> Column(
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    EmptyState(
+                        if (uiState.activeFilterCount > 0) stringResource(R.string.empty_no_match)
+                        else stringResource(R.string.empty_no_offers),
+                    )
+                    // No results in our cache — send the user to the marketplaces' own
+                    // pre-filled search instead (compliant deep-link, no ingest).
+                    MarketplaceLinksRow(filter = uiState.filter)
+                }
                 else -> LazyColumn(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -166,6 +174,8 @@ fun ListingsScreen(
                             onClick = { onOfferClick(offer.id) },
                         )
                     }
+                    // Footer: jump to the marketplaces' own search for the same filter.
+                    item { MarketplaceLinksRow(filter = uiState.filter) }
                 }
             }
         }
