@@ -48,6 +48,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.autka.core.model.Currency
 import com.autka.core.model.ExchangeRates
 import com.autka.core.model.ImportCostEstimate
+import com.autka.feature.external.ImportServicesSection
 import com.autka.ui.components.EmptyState
 import com.autka.ui.components.LoadingIndicator
 import com.autka.ui.components.OfferImage
@@ -144,6 +145,8 @@ fun OfferDetailScreen(
                         onEngineCapacityChange = onEngineCapacityChange,
                     )
                 }
+                // Import/sourcing companies for USA/EUROPE offers; self-hides when empty.
+                ImportServicesSection(services = uiState.importServices)
             }
         }
     }
