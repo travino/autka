@@ -20,9 +20,9 @@ import java.util.Locale
  * Poland search shows Otomoto/OLX/Facebook, a Europe search shows AutoScout24/mobile.de.
  *
  * ⚠️ CONFIDENCE VARIES PER PROVIDER — see the per-builder notes. Path shapes are
- * confirmed; many `search[...]`/filter query KEYS are best-guess and marked TODO(verify).
- * A wrong key lands the user on an unfiltered page (worse than no chip), so confirm
- * each against a live filtered URL before relying on the filtering.
+ * confirmed; remaining best-guess query KEYS are marked TODO(verify). A wrong key lands
+ * the user on an unfiltered page (worse than no chip), so confirm against a live
+ * filtered URL before relying on the filtering.
  */
 data class MarketplaceLink(val sourceId: String, val displayName: String, val url: String)
 
@@ -109,7 +109,9 @@ object MarketplaceSearchLinks {
         SortOrder.YEAR_DESC -> "filter_float_year:desc"
     }
 
-    // --- OLX (PL) — path CONFIRMED; filter keys TODO(verify) -----------------
+    // --- OLX (PL) — path + price keys VERIFIED (search[filter_float_price:to] seen live) -
+    // Same Naspers filter scheme as Otomoto. Location is a path segment
+    // (/samochody/<city>/), which we don't set (no location field in SearchFilter).
 
     private fun olx(f: SearchFilter): String {
         val path = buildString {
@@ -117,11 +119,11 @@ object MarketplaceSearchLinks {
             terms(f).takeIf { it.isNotEmpty() }?.let { append("q-").append(slug(it)).append("/") }
         }
         val q = Params()
-        f.minPrice?.let { q["search[filter_float_price:from]"] = it.toLong().toString() } // TODO(verify)
-        f.maxPrice?.let { q["search[filter_float_price:to]"] = it.toLong().toString() }   // TODO(verify)
-        f.minYear?.let { q["search[filter_float_year:from]"] = it.toString() }            // TODO(verify)
-        f.maxYear?.let { q["search[filter_float_year:to]"] = it.toString() }              // TODO(verify)
-        f.maxMileageKm?.let { q["search[filter_float_milage:to]"] = it.toString() }       // TODO(verify): OLX spells it "milage"
+        f.minPrice?.let { q["search[filter_float_price:from]"] = it.toLong().toString() } // verified
+        f.maxPrice?.let { q["search[filter_float_price:to]"] = it.toLong().toString() }   // verified
+        f.minYear?.let { q["search[filter_float_year:from]"] = it.toString() }            // same scheme
+        f.maxYear?.let { q["search[filter_float_year:to]"] = it.toString() }              // same scheme
+        f.maxMileageKm?.let { q["search[filter_float_mileage:to]"] = it.toString() }      // TODO(verify) attr name
         return path + q.render()
     }
 
@@ -199,18 +201,21 @@ object MarketplaceSearchLinks {
         SortOrder.YEAR_DESC -> "year"
     }
 
-    // --- mobile.de (EU/DE) — make needs a NUMERIC id we can't derive --------
-    // mobile.de keys make/model by internal numeric ids, so we can't build a
-    // make-filtered URL from a name. We pass a free-text search + price/year/mileage
-    // and let the user pick the make on-site. TODO(verify) every key below.
+    // --- mobile.de (EU/DE) — base params + price VERIFIED from a live URL ----
+    // Confirmed: s=Car&vc=Car&isSearchRequest=true&dam=false, and price uses a single
+    // range param p=<min>:<max> (e.g. p=:10000). make/model are internal numeric ids we
+    // can't derive from a name, so the user picks those on-site; year/mileage ranges
+    // (fr/ml) follow mobile.de's range scheme but stay TODO(verify).
 
     private fun mobileDe(f: SearchFilter): String {
         val q = Params()
-        terms(f).takeIf { it.isNotEmpty() }?.let { q["q"] = it }   // TODO(verify) free-text key
-        f.minPrice?.let { q["minPrice"] = it.toLong().toString() } // TODO(verify)
-        f.maxPrice?.let { q["maxPrice"] = it.toLong().toString() } // TODO(verify)
-        f.minYear?.let { q["minFirstRegistrationDate"] = "${it}-01-01" } // TODO(verify) format
-        f.maxMileageKm?.let { q["maxMileage"] = it.toString() }    // TODO(verify)
+        q["isSearchRequest"] = "true"
+        q["s"] = "Car"
+        q["vc"] = "Car"
+        q["dam"] = "false" // exclude damaged
+        range(f.minPrice?.toLong(), f.maxPrice?.toLong())?.let { q["p"] = it } // verified: p=min:max
+        range(f.minYear?.toLong(), f.maxYear?.toLong())?.let { q["fr"] = it }  // TODO(verify) first-registration range
+        f.maxMileageKm?.let { q["ml"] = ":$it" }                               // TODO(verify) mileage range
         return "https://suchen.mobile.de/fahrzeuge/search.html" + q.render()
     }
 
@@ -270,6 +275,10 @@ object MarketplaceSearchLinks {
 
     private fun terms(f: SearchFilter): String =
         listOfNotNull(f.make, f.model, f.query.ifBlank { null }).joinToString(" ").trim()
+
+    /** mobile.de-style "min:max" range (either side may be blank); null if both null. */
+    private fun range(min: Long?, max: Long?): String? =
+        if (min == null && max == null) null else "${min ?: ""}:${max ?: ""}"
 
     /** Lowercase, spaces/odd chars -> hyphens. Good enough for path/slug params. */
     private fun slug(s: String): String = s.trim().lowercase(Locale.ROOT)
