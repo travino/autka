@@ -15,27 +15,25 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.autka.R
-import com.autka.core.model.Region
+import com.autka.core.model.ImportService
 
 /**
  * Detail-screen section listing import companies that can source a given offer into
- * Poland. Shown for USA and EUROPE-import offers, directly under the landed-cost
- * breakdown — the place where the user is already asking "what would it cost to bring
- * this here?" These are services, not searchable listings (see [ImportService]).
+ * Poland, shown directly under the landed-cost breakdown. [services] is already
+ * region-filtered by the ViewModel (USA offer -> US importers, etc.); an empty list
+ * hides the section (e.g. POLAND offers).
  */
 @Composable
 fun ImportServicesSection(
-    region: Region,
+    services: List<ImportService>,
     modifier: Modifier = Modifier,
 ) {
-    val services = remember(region) { ImportServices.forRegion(region) }
     if (services.isEmpty()) return
 
     val context = LocalContext.current
