@@ -153,6 +153,6 @@ Bump via the version catalog at `gradle/libs.versions.toml`.
 
 ## Next steps
 
-- Cache fetched exchange rates across restarts (currently re-fetched each launch).
-- Tests: repository merge/failure-isolation, import calculator, mapper round-trips,
-  `applyFilter`/`sortComparator`.
+- Tests: repository merge/failure-isolation, mapper round-trips. (Import calculator and
+  `applyFilter`/`sortComparator` unit tests have landed; exchange rates are now cached
+  across restarts via DataStore.)
