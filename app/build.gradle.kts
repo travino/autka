@@ -28,9 +28,8 @@ android {
 
     buildTypes {
         release {
-            // TODO: set to your deployed Worker URL, e.g.
-            //   https://cargate-backend.<your-subdomain>.workers.dev/
-            buildConfigField("String", "BACKEND_BASE_URL", "\"https://cargate-backend.example.workers.dev/\"")
+            // Verified live: GET / returns 200 and /offers, /import-services serve JSON.
+            buildConfigField("String", "BACKEND_BASE_URL", "\"https://cargate-backend.travny.workers.dev/\"")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
