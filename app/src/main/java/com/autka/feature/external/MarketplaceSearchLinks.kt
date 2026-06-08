@@ -40,6 +40,7 @@ object MarketplaceSearchLinks {
         MarketplaceProvider("olx", "OLX", setOf(Region.POLAND), { f, _ -> olx(f) }),
         MarketplaceProvider("facebook", "Facebook", setOf(Region.POLAND, Region.EUROPE), { f, _ -> facebook(f) }),
         MarketplaceProvider("autoplac", "Autoplac", setOf(Region.POLAND), { f, _ -> autoplac(f) }),
+        MarketplaceProvider("autotraderpl", "AutoTrader.pl", setOf(Region.POLAND), { f, _ -> autoTraderPl(f) }),
         // AutoUncle is itself an aggregator (~11M EU listings, price ratings) that
         // redirects to the original ad — so one chip covers far more than the single-
         // marketplace ones below. Listed first for that reason.
@@ -257,6 +258,24 @@ object MarketplaceSearchLinks {
         FuelType.DIESEL -> "DIESEL"
         FuelType.HYBRID -> "HYBRID"
         else -> null
+    }
+
+    // --- AutoTrader.pl (PL classifieds) — host + rodzaj_paliwa/cena_od_pln VERIFIED ---
+    // SEPARATE site from autotrader.com (US) below. benzyna (petrol) and cena_od_pln
+    // (min price) confirmed against a live filtered autotrader.pl URL; cena_do_pln (max)
+    // is a parity guess and other fuel values are TODO(verify).
+
+    private fun autoTraderPl(f: SearchFilter): String {
+        val q = Params()
+        f.fuelTypes.firstNotNullOfOrNull(::autoTraderPlFuel)?.let { q["rodzaj_paliwa"] = it }
+        f.minPrice?.let { q["cena_od_pln"] = it.toLong().toString() } // verified
+        f.maxPrice?.let { q["cena_do_pln"] = it.toLong().toString() } // TODO(verify) parity guess
+        return "https://www.autotrader.pl/szukaj/osobowe" + q.render()
+    }
+
+    private fun autoTraderPlFuel(t: FuelType?): String? = when (t) {
+        FuelType.PETROL -> "benzyna" // verified live
+        else -> null                 // TODO(verify) diesel/hybryda/elektryczny/lpg
     }
 
     // --- US auctions (import sourcing) — keyword search ----------------------
