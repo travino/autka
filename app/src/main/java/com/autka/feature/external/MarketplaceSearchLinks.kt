@@ -148,23 +148,28 @@ object MarketplaceSearchLinks {
         return "https://www.facebook.com/marketplace/category/vehicles" + q.render()
     }
 
-    // --- AutoUncle (PL/EU aggregator) — base path CONFIRMED; query keys TODO(verify) -
+    // --- AutoUncle (PL/EU aggregator) — PATH-segment filters VERIFIED from a live URL -
     // Aggregates ~1,900 sites incl. Otomoto/OLX and forwards to the original ad, so it
-    // doubles as broad coverage. NB: it's also autka's most direct competitor — see the
-    // strategic note in the chat. Worth checking whether AutoUncle offers a partner/
-    // affiliate or data program: one feed from them could replace N marketplace deals.
+    // doubles as broad coverage. NB: it's also autka's most direct competitor. Worth
+    // checking whether AutoUncle offers a partner/affiliate/data program — one feed could
+    // replace N marketplace deals.
+    //
+    // Filters are PATH segments, not query params (verified live):
+    //   /pl/samochody-uzywane/f-<fuel>/mp-do-<N>-pln
+    // Confirmed: f-benzyna (petrol) and mp-do-<N>-pln (max price, full PLN). Other fuel
+    // values and the make/model path form are TODO(verify), so omitted rather than
+    // guessed — a wrong path segment 404s, which is worse than an unfiltered page.
 
     private fun autoUncle(f: SearchFilter): String {
-        val q = Params()
-        f.make?.let { q["brands[]"] = slug(it) }   // TODO(verify) key + slug-vs-id
-        f.model?.let { q["models[]"] = slug(it) }  // TODO(verify)
-        f.minPrice?.let { q["price_from"] = it.toLong().toString() } // TODO(verify)
-        f.maxPrice?.let { q["price_to"] = it.toLong().toString() }   // TODO(verify)
-        f.minYear?.let { q["year_from"] = it.toString() }           // TODO(verify)
-        f.maxYear?.let { q["year_to"] = it.toString() }             // TODO(verify)
-        f.maxMileageKm?.let { q["odometer_to"] = it.toString() }    // TODO(verify)
-        if (f.make == null) terms(f).takeIf { it.isNotEmpty() }?.let { q["q"] = it } // TODO(verify)
-        return "https://www.autouncle.pl/pl/samochody-uzywane" + q.render()
+        val segments = mutableListOf("https://www.autouncle.pl/pl/samochody-uzywane")
+        f.fuelTypes.firstNotNullOfOrNull(::autoUncleFuel)?.let { segments += "f-$it" }
+        f.maxPrice?.let { segments += "mp-do-${it.toLong()}-pln" }
+        return segments.joinToString("/")
+    }
+
+    private fun autoUncleFuel(t: FuelType?): String? = when (t) {
+        FuelType.PETROL -> "benzyna" // verified live
+        else -> null                 // TODO(verify) diesel/hybryda/elektryczny/lpg path values
     }
 
     // --- AutoScout24 (.pl) — host + atype/ustate/cy/damaged/fuel VERIFIED from live URLs -
