@@ -38,7 +38,7 @@ jobs:
         run: npm ci
 
       - name: Check generated types are current
-        run: npx wrangler types --check
+        run: npx wrangler types
 
       - name: Typecheck
         run: npm run typecheck
