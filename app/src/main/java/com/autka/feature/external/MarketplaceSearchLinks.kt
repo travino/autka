@@ -180,9 +180,9 @@ object MarketplaceSearchLinks {
         else -> null                      // TODO(verify) diesel/lpg/plugin-hybrid
     }
 
-    // --- AutoScout24 (.pl) — host + atype/ustate/cy/damaged/fuel/reg/mileage VERIFIED ---
-    // price/reg/mileage keys (pricefrom/priceto/fregfrom/fregto/kmto) confirmed against
-    // live URLs. cy scopes to common EU export markets.
+    // --- AutoScout24 (.pl) — host + atype/ustate/cy/damaged/fuel/reg/mileage/sort VERIFIED ---
+    // price/reg/mileage keys (pricefrom/priceto/fregfrom/fregto/kmto) and the sort keys
+    // (age/price/mileage/year) confirmed against live URLs. cy scopes to common EU markets.
 
     private fun autoScout24(f: SearchFilter): String {
         val path = buildString {
@@ -200,7 +200,7 @@ object MarketplaceSearchLinks {
         f.minYear?.let { q["fregfrom"] = it.toString() }            // verified
         f.maxYear?.let { q["fregto"] = it.toString() }              // verified
         f.maxMileageKm?.let { q["kmto"] = it.toString() }           // verified
-        // fuel accepts a comma-joined list of codes (verified live: fuel=B,D and fuel=2,B,O).
+        // fuel accepts a comma-joined list of codes (verified live: fuel=B,D and fuel=2,B,D,3).
         f.fuelTypes.mapNotNull(::autoScoutFuel).distinct().takeIf { it.isNotEmpty() }
             ?.let { q["fuel"] = it.joinToString(",") }
         q["sort"] = autoScoutSort(f.sort)
@@ -225,8 +225,8 @@ object MarketplaceSearchLinks {
     private fun autoScoutSort(s: SortOrder): String = when (s) {
         SortOrder.NEWEST -> "age"                          // verified (live ?sort=age&desc=1)
         SortOrder.PRICE_ASC, SortOrder.PRICE_DESC -> "price" // verified live
-        SortOrder.MILEAGE_ASC -> "mileage"                 // TODO(verify)
-        SortOrder.YEAR_DESC -> "year"                      // TODO(verify)
+        SortOrder.MILEAGE_ASC -> "mileage"                 // verified live (?sort=mileage)
+        SortOrder.YEAR_DESC -> "year"                      // verified live (?sort=year)
     }
 
     // --- mobile.de (EU/DE) — base + price + reg + mileage VERIFIED from live URLs ----
