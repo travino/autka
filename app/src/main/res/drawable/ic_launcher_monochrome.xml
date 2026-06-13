@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Adaptive-icon foreground: white car glyph on the 108dp canvas, content sized to the
-  central safe zone. The windshield and wheels are evenOdd holes, so the
-  @color/ic_launcher_background layer shows through them (instead of hardcoding blue here).
+  Monochrome layer for Android 13+ themed icons. Same glyph as the foreground; the
+  system extracts the alpha and applies its own tint, so the fill colour is arbitrary.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp" android:height="108dp"

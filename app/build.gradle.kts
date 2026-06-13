@@ -8,6 +8,13 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
+// Release signing is opt-in: the CI release job exports these env vars after decoding a
+// keystore from Actions secrets. When they're absent (local builds, debug CI, forks),
+// no signing config is wired up and `assembleRelease` produces an UNSIGNED APK — which is
+// fine for F-Droid (it signs its own builds) but not directly installable / not for Play.
+// Nothing here ever embeds a key in the repo.
+val releaseKeystorePath: String? = System.getenv("AUTKA_KEYSTORE")?.takeIf { it.isNotBlank() }
+
 android {
     namespace = "com.autka"
     compileSdk = 37
@@ -26,6 +33,17 @@ android {
         buildConfigField("String", "BACKEND_BASE_URL", "\"http://10.0.2.2:8787/\"")
     }
 
+    signingConfigs {
+        if (releaseKeystorePath != null) {
+            create("release") {
+                storeFile = file(releaseKeystorePath)
+                storePassword = System.getenv("AUTKA_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("AUTKA_KEY_ALIAS")
+                keyPassword = System.getenv("AUTKA_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
             // Verified live: GET / returns 200 and /offers, /import-services serve JSON.
@@ -36,6 +54,10 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
+            // Only sign when a keystore was provided; otherwise leave unsigned.
+            if (releaseKeystorePath != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
     compileOptions {
