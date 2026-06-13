@@ -28,8 +28,11 @@ export interface IngestResult {
  * Run all enabled sources. Each source is isolated: one failing does not stop the
  * others. Records a row in ingest_runs per source for observability.
  */
-export async function runIngestion(env: Env): Promise<IngestResult[]> {
-  const enabled = ALL_SOURCES.filter((s) => s.isEnabled(env));
+export async function runIngestion(
+  env: Env,
+  sources: readonly IngestSource[] = ALL_SOURCES,
+): Promise<IngestResult[]> {
+  const enabled = sources.filter((s) => s.isEnabled(env));
   const results = await Promise.all(enabled.map((s) => runOne(env, s)));
   // Keep the debug table bounded. Best-effort: a cleanup failure must never fail
   // the ingest itself.
