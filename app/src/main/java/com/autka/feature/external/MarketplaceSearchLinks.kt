@@ -180,9 +180,10 @@ object MarketplaceSearchLinks {
         else -> null                      // TODO(verify) diesel/lpg/plugin-hybrid
     }
 
-    // --- AutoScout24 (.pl) — host + atype/ustate/cy/damaged/fuel/reg/mileage/sort VERIFIED ---
-    // price/reg/mileage keys (pricefrom/priceto/fregfrom/fregto/kmto) and the sort keys
-    // (age/price/mileage/year) confirmed against live URLs. cy scopes to common EU markets.
+    // --- AutoScout24 (.pl) — host + atype/ustate/cy/damaged/fuel/reg/mileage/sort/kwd VERIFIED ---
+    // price/reg/mileage keys (pricefrom/priceto/fregfrom/fregto/kmto), sort keys
+    // (age/price/mileage/year) and the free-text key (kwd) all confirmed against live URLs.
+    // cy scopes to common EU markets.
 
     private fun autoScout24(f: SearchFilter): String {
         val path = buildString {
@@ -205,7 +206,7 @@ object MarketplaceSearchLinks {
             ?.let { q["fuel"] = it.joinToString(",") }
         q["sort"] = autoScoutSort(f.sort)
         q["desc"] = if (f.sort == SortOrder.PRICE_DESC || f.sort == SortOrder.YEAR_DESC) "1" else "0"
-        if (f.make == null) terms(f).takeIf { it.isNotEmpty() }?.let { q["search"] = it } // TODO(verify) free-text key
+        if (f.make == null) terms(f).takeIf { it.isNotEmpty() }?.let { q["kwd"] = it } // verified live (?kwd=)
         return path + q.render()
     }
 
