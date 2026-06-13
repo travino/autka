@@ -1,0 +1,16 @@
+Autka aggregates used-car listings from Poland, the rest of Europe and the United States in one place, and helps you understand what an imported car will really cost once it lands in Poland.
+
+Features
+* One search across Polish, European and US-import listings.
+* Landed-cost estimator for US imports: customs duty, excise (akcyza), VAT and shipping, with the engine size and drivetrain taken into account.
+* Prices converted to a single currency so mixed-source results are comparable at a glance.
+* Filter by make, price, year, mileage, fuel type, region and source; sort by price, year or mileage.
+* Map view for listing locations (OpenStreetMap — no Google account or API key needed).
+* Deep links that continue your search on the original marketplace, and a directory of independent import-service companies.
+* Works offline: your last results stay available with no connection.
+
+Privacy
+* No ads and no third-party tracking.
+* Only two permissions: internet and network state.
+
+Autka is open source (MIT). The import-cost figures are estimates only — actual customs valuation, rates and fees vary.

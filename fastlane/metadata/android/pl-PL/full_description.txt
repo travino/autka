@@ -1,0 +1,16 @@
+Autka zbiera ogłoszenia samochodów używanych z Polski, reszty Europy i Stanów Zjednoczonych w jednym miejscu i pomaga oszacować, ile naprawdę będzie kosztować sprowadzony samochód po dotarciu do Polski.
+
+Funkcje
+* Jedno wyszukiwanie ofert z Polski, Europy i importu z USA.
+* Kalkulator kosztów importu z USA: cło, akcyza, VAT i transport, z uwzględnieniem pojemności silnika i rodzaju napędu.
+* Ceny przeliczane na jedną walutę, aby oferty z różnych źródeł były porównywalne.
+* Filtrowanie według marki, ceny, rocznika, przebiegu, rodzaju paliwa, regionu i źródła; sortowanie według ceny, rocznika lub przebiegu.
+* Widok mapy z lokalizacją ofert (OpenStreetMap — bez konta Google i klucza API).
+* Linki kontynuujące wyszukiwanie w oryginalnym serwisie oraz katalog niezależnych firm zajmujących się importem.
+* Działa offline: ostatnie wyniki pozostają dostępne bez połączenia.
+
+Prywatność
+* Bez reklam i bez śledzenia przez podmioty trzecie.
+* Tylko dwa uprawnienia: internet i stan sieci.
+
+Autka jest oprogramowaniem open source (MIT). Podane koszty importu to wyłącznie szacunki — faktyczna wycena celna, stawki i opłaty mogą się różnić.

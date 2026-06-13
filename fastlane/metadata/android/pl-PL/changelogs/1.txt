@@ -1,0 +1,1 @@
+Pierwsze publiczne wydanie: zbiorcze wyszukiwanie, kalkulator kosztów importu z USA, widok mapy, wyniki offline.
